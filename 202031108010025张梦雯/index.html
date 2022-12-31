@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>逛吃武汉</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 90%;
+            width: 100%;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.23/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.23/"></script>
+	<link href='#css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
+	<link href="css/bootstrap.css" rel='stylesheet' type='text/css'/>
+	<link href="css/style.css" rel="stylesheet" type="text/css" media="all"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
+	<!--js--> 
+	<script src="js/jquery.min.js"></script>
+
+	<!--/js-->
+	<!--animated-css-->
+	<link href="css/animate.css" rel="stylesheet" type="text/css" media="all">
+	<script src="js/wow.min.js"></script>
+	<script>
+	new WOW().init();
+	</script>
+	<!--/animated-css-->
+	<script>
+	    require([
+	    "esri/config",
+	    "esri/Map", 
+	    "esri/views/MapView",
+	    "esri/layers/MapImageLayer",
+	    "esri/widgets/LayerList",
+	    "esri/layers/FeatureLayer",
+	    "esri/core/reactiveUtils",
+	    "esri/layers/GeoJSONLayer",
+		"esri/layers/CSVLayer",
+		"esri/Graphic",
+		"esri/widgets/Legend",
+		"esri/geometry/geometryEngine","esri/PopupTemplate",
+		"esri/renderers/UniqueValueRenderer",
+		"esri/renderers/SimpleRenderer",
+		"esri/symbols/SimpleMarkerSymbol",
+		"esri/views/layers/support/FeatureEffect",], function (esriConfig,
+	      Map, 
+	      MapView,
+	      MapImageLayer,LayerList,FeatureLayer,reactiveUtils,
+	      GeoJSONLayer,CSVLayer,Graphic,Legend,geometryEngine,PopupTemplate,UR,SR,SMS,FeatureEffect) {
+	  
+	      esriConfig.apiKey = "AAPK449340f85b664e6b802d2d0e65eb4849vlSII8YqKpEj5Fn0hCy2qr4QyOAZRZSB6XWDc2-X8pFlNoRYoQoetUvFs1Y_JVKL";
+	  
+	      const map = new Map({
+	        basemap: "arcgis-topographic" // Basemap layer service
+	      });
+	
+	   
+	      const wuhanlayer = new GeoJSONLayer({
+			  title:"wuhan_",
+			url: "https://zhangmw123.github.io/gis3/wuhan.json",
+		 
+			});
+		
+	
+		const shoppingmallLayer = new CSVLayer({
+			title:"wuhan_shoppingmall",
+		    url: "https://zhangmw123.github.io/gis3/wuhan_shoppingmall.csv",
+			delimiter: ",",
+			popupTemplate: {
+			    title: "{name}",
+			        content: "quyu <b>{adname}</b> <br/><br/> "+
+			        "Rank: <ba>{rank}</ba>"
+			            },
+		  });
+		  const eatingLayer = new CSVLayer({
+		  	title:"wuhan_eating",
+		    url: "https://zhangmw123.github.io/gis3/wuhan_eating.csv",
+			latitudeField:"lat",
+			longitudeField:"lng",
+			delimiter: ",",
+			popupTemplate: {
+			    title: "名称:{name}",
+			        content: "quyu <b>{adname}</b> <br/><br/> "+
+			        "Type: <ba>{type}</ba>"
+			            },
+		    });
+			
+			var sms = new SMS({
+			    style: "square",
+			    color: [250,100,100,0.3],
+			    size: "10px",
+			    outline: null
+			    
+			});
+			            
+			const sr_s = new SR({
+			    
+			    symbol:sms
+			});
+			            
+			var ur_s = new UR({
+			    field:"rank",
+			    uniqueValueInfos:[
+			        {value:"3",symbol:{type:"simple-marker",color: [0,150,200,1],size: "10px",outline: null}},
+			        {value:"2",symbol: {type:"simple-marker",color: [0,100,130,1],size: "10px",outline: null}},
+					{value:"1",symbol: {type:"simple-marker",color: [0,50,70 ,1],size: "10px",outline: null}}]
+			    
+			});
+			            
+			shoppingmallLayer.renderer = ur_s;
+			
+			var sms = new SMS({
+			    style: "triangle",
+			    color: [250,100,100,0.3],
+			    size: "10px",
+			    outline: null
+			    
+			});
+			            
+			const sr_e = new SR({
+			    
+			    symbol:sms
+			});
+			            
+			var ur_e = new UR({
+			    field:"type",
+			    uniqueValueInfos:[
+			        {value:"DrinkShop",symbol:{type:"simple-marker",color: [128,0,128,1],size: "10px",outline: null,style:"square"}},
+			        {value:"ChineseFood",symbol: {type:"simple-marker",color: [200,0,0,1],size: "10px",outline: null,style:"square"}},
+					{value:"ForeignFood",symbol: {type:"simple-marker",color: [100,200,130,1],size: "10px",outline: null,style:"square"}},
+					{value:"Bakery",symbol: {type:"simple-marker",color: [250,150,70 ,1],size: "10px",outline: null,style:"square"}}]
+			    
+			});
+			            
+			eatingLayer.renderer = ur_e;
+					
+		
+		  
+		  wuhanlayer.outFields = ["*"];
+		  map.add(wuhanlayer);
+		  map.add(eatingLayer);
+		  map.add(shoppingmallLayer); 
+		  
+		  
+	
+		  
+	
+	      const view = new MapView({
+	        map: map,
+	        center: [114.805, 31.027], // Longitude, latitude
+	        zoom:8, // Zoom level
+	        container: "viewDiv" // Div element
+	      });
+	
+	      let layerList = new LayerList({
+	      view: view
+	      });
+	      // Adds widget below other elements in the top left corner of the view
+	      view.ui.add(layerList, {
+	      position: "top-left"
+	      });
+		  let legend = new Legend({
+		                    view: view
+		                  });
+		  
+		                  view.ui.add(legend, "bottom-right");
+	      
+	      view.on("click", function (evt) {
+	          view.graphics.removeAll();
+	          if (evt.button != 0) return;
+	          let query = wuhanlayer.createQuery();
+	          query.geometry = view.toMap(evt);  // the point location of the pointer
+	          query.distance = 2;
+	          query.units = "miles";
+	          query.spatialRelationship = "intersects";  // this is the default
+	          query.returnGeometry = true;
+	          query.outFields = ["*"];
+	          //query.where = "mag > 3";
+	      
+	          //geojsonlayer.queryFeatureCount(query).then(function (abc) { alert("Layer: "+abc) });
+	          wuhanlayer.queryFeatures(query).then(function (abc) {
+	      
+	      
+	              abc.features.forEach(function (item) {
+	      
+	                  var g = new Graphic({
+	                      geometry: item.geometry,
+	                      attributes: item.attributes,
+	                      symbol: {
+	                          type: "simple-fill",
+	                          color: [100, 200, 100, 0.3],
+	                          //size: 3,//item.attributes['magnitude'] * item.attributes['magnitude'],
+	                          //style: "square"
+	      
+	                      }
+	                  });
+	      
+	                  view.graphics.add(g);
+	                  
+	                  const area = geometryEngine.geodesicArea(item.geometry, "square-kilometers");
+	                  alert( item.attributes["name"] +" Area: " +  area);
+	                  
+	              });
+	      
+	          });
+			
+	      });
+		  view.on("click", function () {
+		  
+		    //第一步，设定符号
+		    const less500 = {
+		      type: "simple-fill", // autocasts as new SimpleFillSymbol()
+		      color: "#fffcd4",
+		      style: "solid",
+		      outline: {
+		        width: 0.2,
+		        color: [255, 255, 255, 0.5]
+		      }
+		    };
+		  
+		    const less1000 = {
+		      type: "simple-fill", // autocasts as new SimpleFillSymbol()
+		      color: "#b1cdc2",
+		      style: "solid",
+		      outline: {
+		        width: 0.2,
+		        color: [255, 255, 255, 0.5]
+		      }
+		    };
+		  
+		    const more1000 = {
+		      type: "simple-fill", // autocasts as new SimpleFillSymbol()
+		      color: "#38627a",
+		      style: "solid",
+		      outline: {
+		        width: 0.2,
+		        color: [255, 255, 255, 0.5]
+		      }
+		    };
+		  
+		    const more1400 = {
+		      type: "simple-fill", // autocasts as new SimpleFillSymbol()
+		      color: "#0d2644",
+		      style: "solid",
+		      outline: {
+		        width: 0.2,
+		        color: [255, 255, 255, 0.5]
+		      }
+		    };
+		  
+		    // 第二步，指定渲染器
+		    const renderer = {
+		      type: "class-breaks", // autocasts as new ClassBreaksRenderer()
+		      field: "GDP", // total number
+		      defaultSymbol: {
+		        type: "simple-fill", // autocasts as new SimpleFillSymbol()
+		        color: "black",
+		        style: "backward-diagonal",
+		        outline: {
+		          width: 0.5,
+		          color: [50, 50, 50, 0.6]
+		        }
+		      },
+		      classBreakInfos: [
+		        {
+		          minValue: 0,
+		          maxValue: 500,
+		          symbol: less500,
+		          label: "500万" // label for symbol in legend
+		        },
+		        {
+		          minValue: 500,
+		          maxValue: 1000,
+		          symbol: less1000,
+		          label: "1000万" // label for symbol in legend
+		        },
+		        {
+		          minValue: 1000,
+		          maxValue: 1400,
+		          symbol: more1000,
+		          label: "1400万" // label for symbol in legend
+		        },
+		        {
+		          minValue: 1400,
+		          maxValue: 2000,
+		          symbol: more1400,
+		          label: "2000万" // label for symbol in legend
+		        }
+		      ],
+		      defaultLabel: "no data" // legend label for features that don't match a class break
+		    };
+		  
+		  
+		    wuhanlayer.renderer = renderer;
+		  
+		  });
+	     
+	
+	     
+	    });
+	  
+	</script>
+	
+</head>
+<body>
+	
+<!--header-->
+<!--sticky-->
+	 <div class="header-top">
+		 <!--container-->
+		  <div class="container">
+			 <div class="top-nav">
+						<div class="logo">
+						<a href="#"><img src="images/logo.png" id="section-1" class="img-responsive" alt=""/></a>
+						</div>
+						<div class="menu">
+						<ul id="nav">
+							 <li><a href="#section-1">Map</a></li>
+							 <li><a href="#section-2">About Wuhan</a></li>
+							 <li><a href="#section-3">Food</a></li>
+							 <li><a href="#section-4">Shoppingmall</a></li>
+							 <li><a href="#section-5">Contact</a></li>
+							 <div class="clearfix"></div>
+						 </ul>
+						 </div>
+			 </div>
+			  <div class="clearfix"> </div>
+			
+
+		 </div>
+		 <!--/container-->
+	 </div>
+
+	 <div id="viewDiv"></div>
+<!--/sticky-->
+<!---banner--->
+<!----start-slider-script---->
+			<script src="js/responsiveslides.min.js"></script>
+			 <script>
+			    // You can also use "$(window).load(function() {"
+			    $(function () {
+			      // Slideshow 4
+			      $("#slider4").responsiveSlides({
+			        auto: true,
+			        pager: true,
+			        nav: true,
+			        speed: 500,
+			        namespace: "callbacks",
+			        before: function () {
+			          $('.events').append("<li>before event fired.</li>");
+			        },
+			        after: function () {
+			          $('.events').append("<li>after event fired.</li>");
+			        }
+			      });
+			
+			    });
+			  </script>
+			<!----//End-slider-script---->
+			<!-- Slideshow 4 -->
+			<div id="section-1" class="section">
+			         
+			    <div class="clearfix"> </div>
+				</div>
+		<!----- //End-slider---->
+<!---banner--->	
+<!--About-->
+     <div class="about section" id="section-2">
+	  <div class="about-head text-center">
+	  <h3>About Wuhan</h3>
+	  <span></span><img src="images/about-img.png" alt=""><span></span>
+	  </div>
+	   <div class="container">		  
+		 <div class="col-md-4 about-grids">
+			 <h4><span class="icon1"></span>Best Destinations</h4>
+			 <p>武汉地处江汉平原东部、长江中游，是长江经济带核心城市、中部崛起战略支点、中国人民解放军联勤保障部队机关驻地。武汉自古又称“江城”，素有“九省通衢”之称，长江与其最大支流汉江在此交汇，形成武昌、汉口、汉阳三镇隔江鼎立的格局，是全国重要的水陆空综合交通枢纽、中国经济地理中心、全国四大铁路枢纽之一。
+			 </p>
+		 </div>
+		 <div class="col-md-4 about-grids grid2">
+			 <h4><span class="icon2"></span>Traffic</h4>
+			 <p>武汉市拥有一个天河国际机场，三个火车站：汉口站、武昌站、武汉站，市内轨道交通截至2022年12月，武汉地铁运营线路共有11条，包括1号线、2号线、3号线、4号线、5号线、6号线、7号线（含纸坊线、前川线）、8号线、11号线、16号线、阳逻线，共291座车站，总运营里程达460千米。公交基本全覆盖。</p>
+		 </div>
+		 <div class="col-md-4 about-grids">
+			 <h4><span class="icon3"></span>Famous Scenery</h4>
+			 <p>武汉是首批中国优秀旅游城市，每年举办武汉国际旅游节。武汉自然风光独特，四季气候分明，拥有其他大都市罕有的166个湖泊和众多山峦。武汉的人文景观具有浓郁的楚文化特色。截至2018年末，武汉市有国家A级旅游景区46个，其中5A级3个，4A级19个，3A级24个。除了黄鹤楼、湖北省博物馆、东湖、木兰草原等著名景点，还有江汉路、户部巷、昙华林等特色街区。</p>
+		 </div>
+	 </div>
+</div>
+<!--/About-->
+<!--top-tours-->	
+<div  class="section" id="section-3">
+<div id="portfolio" class="portfolio">
+   <div class="top-tours-head text-center">
+		  <h3>Spatial Food</h3>
+		  <span></span><img src="images/star.png" alt=""><span></span>
+		  <div class="container">
+				<p>武汉饮食，可谓一早一晚，过早和宵夜最为经典，有“早尝户部巷，夜吃吉庆街”之美谈。武汉菜秉承湖北菜系风格，汇聚东西南北精华，菜品丰富多样，又自成特色，是著名的“美食之都”。
+				武汉特色小吃有热干面、三鲜豆皮、面窝、米粑、豆丝、欢喜坨、鸭脖子、武昌鱼、排骨藕汤、洪山菜薹炒腊肉、糍粑等。</p>
+		  </div>
+		  </div>
+	      <ul id="filters" class="clearfix wow bounceIn" data-wow-delay="0.4s">
+			<li><span class="filter active" data-filter="app card icon logo fun">ALL</span></li>
+			<li><span class="filter" data-filter="app">小吃</span></li>
+			<li><span class="filter" data-filter="card">早餐</span></li>
+			<li><span class="filter" data-filter="icon">特色家常菜</span></li>
+			<li><span class="filter" data-filter="fun">热门餐厅美食</span></li>
+	        </ul>
+	     <div id="portfoliolist">
+					<div class="portfolio card mix_all" data-cat="card" style="display: inline-block; opacity: 1;">
+						<div class="portfolio-wrapper wow bounceIn" data-wow-delay="0.4s">		
+							<a href="#" class="b-link-stripe b-animate-go  thickbox play-icon popup-with-zoom-anim">
+						     <img src="images/1.png" class="img-responsive" alt=""/></a>
+							<div class="tour-caption">
+							<span> </span>
+							<p>搜索与查询</p>
+							</div>
+
+						</div>
+					</div>				
+					<div class="portfolio app mix_all" data-cat="app" style="display: inline-block; opacity: 1;">
+						<div class="portfolio-wrapper wow bounceIn" data-wow-delay="0.4s">		
+							<a href="#" class="b-link-stripe b-animate-go  thickbox play-icon popup-with-zoom-anim">
+						     <img src="images/2.png" class="img-responsive" alt=""/></a>
+							 <div class="tour-caption">
+							 <span> </span>
+							 <p>搜索与查询</p>
+						     </div>
+
+						</div>
+					</div>		
+					<div class="portfolio card mix_all" data-cat="card" style="display: inline-block; opacity: 1;">
+						<div class="portfolio-wrapper wow bounceIn" data-wow-delay="0.4s">		
+							<a href="#" class="b-link-stripe b-animate-go  thickbox play-icon popup-with-zoom-anim">
+						     <img src="images/3.webp" class="img-responsive" alt=""/></a>
+							 <div class="tour-caption">
+							 <span> </span>
+							 <p>搜索与查询</p>
+							 </div>
+						</div>
+					</div>				
+					<div class="portfolio icon mix_all" data-cat="icon" style="display: inline-block; opacity: 1;">
+						<div class="portfolio-wrapper wow bounceIn" data-wow-delay="0.4s">		
+							<a href="#" class="b-link-stripe b-animate-go  thickbox play-icon popup-with-zoom-anim">
+						     <img src="images/4.png" class="img-responsive" alt=""/></a>
+							 <div class="tour-caption">
+							 <span> </span>
+							<p>搜索与查询</p>
+							</div>
+						</div>
+					</div>	
+					<div class="portfolio card mix_all" data-cat="card" style="display: inline-block; opacity: 1;">
+						<div class="portfolio-wrapper wow bounceIn" data-wow-delay="0.4s">		
+							<a href="#" class="b-link-stripe b-animate-go  thickbox play-icon popup-with-zoom-anim">
+						     <img src="images/5.png" class="img-responsive" alt=""/></a>
+							 <div class="tour-caption">
+							 <span> </span>
+							 <p>搜索与查询</p>
+							 </div>
+						</div>
+					</div>			
+					<div class="portfolio fun mix_all" data-cat="fun" style="display: inline-block; opacity: 1;">
+						<div class="portfolio-wrapper wow bounceIn" data-wow-delay="0.4s">		
+							<a href="#" class="b-link-stripe b-animate-go  thickbox play-icon popup-with-zoom-anim">
+						     <img src="images/6.png" class="img-responsive" alt=""/></a>
+							 <div class="tour-caption">
+							 <span> </span>
+							<p>搜索与查询</p>
+							</div>
+						</div>
+			      </div>
+				  <div class="portfolio fun mix_all" data-cat="fun" style="display: inline-block; opacity: 1;">
+						<div class="portfolio-wrapper wow bounceIn" data-wow-delay="0.4s">		
+							<a href="#" class="b-link-stripe b-animate-go  thickbox play-icon popup-with-zoom-anim">
+							<img src="images/7.png" class="img-responsive" alt=""/></a>
+							<div class="tour-caption">
+							<span> </span>
+							<p>搜索与查询</p>
+							</div>
+						</div>
+			      </div>
+				  <div class="portfolio icon mix_all" data-cat="fun" style="display: inline-block; opacity: 1;">
+						<div class="portfolio-wrapper wow bounceIn" data-wow-delay="0.4s">		
+							<a href="#" class="b-link-stripe b-animate-go  thickbox play-icon popup-with-zoom-anim">
+						     <img src="images/8.png" class="img-responsive" alt=""/></a>
+							 <div class="tour-caption">
+							 <span> </span>
+							 <p>搜索与查询</p>
+							 </div>
+					   </div>
+			      </div>
+		   <div class="clearfix"></div>	
+	  </div>
+</div>
+</div>  
+<!-- Script for gallery Here-->
+<script type="text/javascript" src="js/jquery.mixitup.min.js"></script>
+<script type="text/javascript">
+	$(function () {
+		var filterList = {
+		init: function () {
+// MixItUp plugin
+// http://mixitup.io
+				$('#portfoliolist').mixitup({
+					targetSelector: '.portfolio',
+					filterSelector: '.filter',
+					effects: ['fade'],
+					easing: 'snap',
+				// call the hover effect
+				onMixEnd: filterList.hoverEffect()
+	});				
+},
+		hoverEffect: function () {
+// Simple parallax effect
+		$('#portfoliolist .portfolio').hover(
+			function () {
+			$(this).find('.label').stop().animate({bottom: 0}, 200, 'easeOutQuad');
+			$(this).find('img').stop().animate({top: -30}, 500, 'easeOutQuad');				
+			},
+					function () {
+						$(this).find('.label').stop().animate({bottom: -40}, 200, 'easeInQuad');
+						$(this).find('img').stop().animate({top: 0}, 300, 'easeOutQuad');								
+			}		
+		);				
+	}
+};
+// Run the show!
+		filterList.init();
+	});	
+</script>
+<!--Gallery Script Ends-->	 
+<!--/top-tours-->
+<div class="tour-guides section" id="section-4" >
+	  <div class="tour-guides-head text-center">
+		  <h3>Top Shoppingmall</h3>
+		  <span></span><img src="images/guide.png" alt=""><span></span>
+		  <div class="container">
+				<p>武汉商场众多，各有各的特色</p>
+		  </div>
+	  </div>
+	  <div class="container">
+		<!-- requried-jsfiles-for owl -->
+				<link href="css/owl.carousel.css" rel="stylesheet">
+							    <script src="js/owl.carousel.js"></script>
+							        <script>
+							    $(document).ready(function() {
+							      $("#owl-demo").owlCarousel({
+							        items : 1,
+							        lazyLoad : true,
+							        autoPlay : true,
+							        navigation : false,
+							        navigationText :  false,
+							        pagination : true,
+							      });
+							    });
+							    </script>
+			<!-- //requried-jsfiles-for owl -->
+		  <div id="owl-demo" class="owl-carousel">
+			  <div class="item text-center guide-sliders">
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m1.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">武汉国际广场</a></p>
+					 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m2.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">武商广场</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m3.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">K11</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m4.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">群光广场</a></p>
+				 </div>   
+			  </div>
+			  <div class="item text-center guide-sliders">
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m5.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">永旺梦乐城</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m6.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">百联奥特莱斯</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m7.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">宜家荟聚</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m8.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">M+购物中心</a></p>
+				 </div>   
+			  </div>
+			  <div class="item text-center guide-sliders">
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m9.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">凯德1818</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m10.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">武汉摩尔城</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m11.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">汉商银座</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m12.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">新世界百货</a></p>
+				 </div>   
+			  </div>   
+			 <div class="item text-center guide-sliders">
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m13.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">万科未来中心</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m14.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">王府井百货</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m15.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">汉口城市广场</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m16.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">云尚国际</a></p>
+				 </div>   
+			  </div>
+			  <div class="item text-center guide-slide">
+			  <div class="col-md-3 image-grid">
+					 <img src="images/m17.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">江宸天街</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m18.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">范湖万达</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m19.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">万象城</a></p>
+				 </div>
+				 <div class="col-md-3 image-grid">
+					 <img src="images/m20.png">
+					 <div class="guide-caption">
+					 <span></span>
+						<a href="#"><span class="twit"> </span></a>
+						<a href="#"><span class="fb"> </span></a>
+						<a href="#"><span class="gplus"> </span></a>
+					 </div>
+					 <p><a href="#">中心百货</a></p>
+				 </div> 
+			  </div>
+		  </div>
+		</div>
+</div>
+<!--client-say-->
+<div class="client-say">
+	 <div class="client-say-layer">
+	     <div class="client-say-head text-center">
+			  <h3>People Say</h3>
+			  <span></span><img src="images/face.png" alt=""><span></span>
+			  <!-- requried-jsfiles-for owl -->
+				<link href="css/owl.carousel.css" rel="stylesheet">
+							    <script src="js/owl.carousel.js"></script>
+							        <script>
+							    $(document).ready(function() {
+							      $("#owl-demo1").owlCarousel({
+							        items : 1,
+							        lazyLoad : true,
+							        autoPlay : true,
+							        navigation : false,
+							        navigationText :  false,
+							        pagination : true,
+							      });
+							    });
+							    </script>
+			 <!-- //requried-jsfiles-for owl -->
+		     <div id="owl-demo1" class="owl-carousel">
+				  <div class="item">
+					  <div class="client-say-info">
+							<p><img src="images/dots1.png" alt="#">才饮长沙水，又食武昌鱼。万里长江横渡，极目楚天舒。<img src="images/dots2.png" alt="#"></p>
+							<h4>毛泽东</h4>
+						    <h6><span></span></h6>
+					  </div> 
+				  </div>
+				   <div class="item">
+					  <div class="client-say-info">
+							<p><img src="images/dots1.png" alt="#">故人西辞黄鹤楼，烟花三月下扬州。孤帆远影碧空尽，唯见长江天际流。<img src="images/dots2.png" alt="#"></p>
+							<h4>（唐）李白</h4>
+						    <h6><span></span></h6>
+					  </div> 
+				  </div>
+				   <div class="item">
+					   <div class="client-say-info">
+							<p><img src="images/dots1.png" alt="#">影象三袁集丛林，葵园逸兴抒情真。
+千竿风竹划天破，万点雪梅唤地春。
+春去春回三百载，花开花谢一时辰。
+只缘不惯闻烟火，致使难逃损骨神。<img src="images/dots2.png" alt="#"></p>
+							<h4>公木</h4>
+						    <h6><span></span></h6>
+					   </div> 
+				  </div>
+				  <div class="item">
+					  <div class="client-say-info">
+							<p><img src="images/dots1.png" alt="#">昔人已乘黄鹤去，此地空余黄鹤楼。
+
+黄鹤一去不复返，白云千载空悠悠。晴川历历汉阳树，芳草萋萋鹦鹉洲。
+
+日暮乡关何处是，烟波江上使人愁。<img src="images/dots2.png" alt="#"></p>
+						    <h4>（唐）崔颢</h4>
+						    <h6><span></span></h6>
+					  </div> 
+				  </div>
+				  <div class="item">
+					   <div class="client-say-info">
+							<p><img src="images/dots1.png" alt="#">扶摇直上九重天，日月星辰任摘攀。
+势压龟蛇千里目，气吞荆楚万里山。
+烟波缥缈连寰宇，扬子奔腾卷巨澜。
+黄鹤不须温旧梦，江城处处是飞仙。<img src="images/dots2.png" alt="#"></p>
+							<h4>周国强</h4>
+						    <h6><span></span></h6>
+					  </div> 
+				  </div>
+			  </div>
+          </div>
+      </div>
+</div>
+<!--/client-say-->
+<div id="section-5" class="contact section">
+	  <div class="contact-head text-center">
+		  <h3>CONTACT US</h3>
+		  <span></span><img src="images/mail.png" alt=""><span></span>
+		  <div class="contact-grids">
+			  <div class="container">
+				  <div class="col-md-4 address">
+						<h4>有问题请联系我们！</h4>
+						<p>welcome to give your ideas to us</p>
+						<h5><span class="img1"></span>(+1) 234 56 789&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;(+1) 234 56 780</h5>
+						<h5><span class="img2"></span><a href="#">info[at]mytour.com&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;support[at]mytour.com</a></h5>
+						<h5><span class="img3"></span>1100 High Street,New York City,USA.</h5>
+				  </div>
+				  <div class="col-md-8 contact">	
+					  <form>
+					  <input type="text" class="text" value=" Name" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'Your Name';}">
+					  <input type="text" class="text" value="Email" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'Your mail';}">
+					  <textarea onfocus="if(this.value == 'Message') this.value='';" onblur="if(this.value == '') this.value='Enter Message Here';" >Message</textarea>
+					  <input type="submit" value="Send message">
+					  <div class="clearfix"></div>
+					   </form>
+				   </div>
+				  <div class="clearfix"></div>
+			  </div>
+		  </div>
+	        
+	  </div>
+</div>
+<div class="fotter">	
+	 <div class="container">
+		 <div class="fotter-grids">
+			 <div class="col-md-4 fotter-left">
+			 <img src="images/fotter-logo.png" alt="">
+			 <p>welcome to Wuhan.</p>
+			 </div>
+			 <div class="col-md-4 fotter-middle">
+				 <h3>Latest News</h3>
+				 <div class="footer-list">
+						<ul>
+						<li><a href="#"><span></span>进出武汉取消查验核酸结果.</a></li> 
+						<li><a href="#"><span></span>武商梦时代盛大开业.</a></li> 
+						<li><a href="#"><span></span>武汉餐饮已恢复堂食.</a></li> 
+						<li><a href="#"><span></span>元旦期间江汉路、循礼门地铁站取消站内换乘.</a></li> 
+						<li><a href="#"><span></span>江汉路Happy站台9.9代20优惠劵正在发放中.</a></li>
+						</ul>
+				 </div>
+			 </div>
+			 <div class="col-md-4 fotter-right">
+			 <h3>Newsletter</h3>
+			 <form>
+			 <input type="text" class="text" value="E-mail" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'Your mail';}">
+			 <input type="submit" value="Send">
+			 <div class="clearfix"></div>
+			 </form>
+			 <div class="social-icons">
+			 <a href="#"><span class="facebook"> </span></a>
+			 <a href="#"><span class="twitter"> </span></a>
+			 <a href="#"><span class="googleplus"> </span></a>
+			 <a href="#"><span class="pinterest"> </span></a>
+			 <a href="#"><span class="instagram"> </span></a>
+			 </div>
+			 <div class="clearfix"></div>
+	     </div>
+		 <div class="clearfix"></div>
+	 </div>
+</div>
+</div>  
+<div class="copyright text-center">
+<p>Copyright &copy; 2022.12.31<a target="_blank" href="http://guantaow.taobao.com/">20地信张梦雯</a><a target="_blank" href="http://www.moobnn.com">网页设计</a></p>
+</div>
+
+  <script src="js/jquery.scrollTo.js"></script>
+	<script src="js/jquery.nav.js"></script>
+	<script type="text/javascript">
+	$(document).ready(function() {
+		$('#nav').onePageNav({
+			begin: function() {
+			console.log('start')
+			},
+			end: function() {
+			console.log('stop')
+			}
+		});
+	});
+	</script>
+  
+</body>
+</html>
