@@ -1,0 +1,595 @@
+ <!DOCTYPE html>
+<html class="not-ie no-js" lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+	<title>荆楚游礼 | 魅力荆楚游</title>
+	<meta name="description" content="">
+	<meta name="author" content="">	
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+	<link rel="icon" type="image/png" href="images/favicon.ico">
+	<link rel="stylesheet" href="css/style.css" media="screen" />
+	<link rel="stylesheet" href="sliders/elastslider/elastic.css" media="screen" />
+	<!-- HTML5 Shiv + detect touch events -->
+	<link rel="stylesheet" href="https://js.arcgis.com/4.19/esri/themes/light/main.css">
+	<script src="js/modernizr.custom.js"></script>
+	<style>
+	    html,
+	    body,
+	    #viewDiv {
+	        padding: 0;
+	        margin: 0;
+	        height: 90%;
+	        width: 100%;
+	    }
+	</style>
+	<link rel="stylesheet" href="https://js.arcgis.com/4.19/esri/themes/light/main.css">
+	<script src="https://js.arcgis.com/4.19/"></script>
+	<script>
+	    require([
+	        "esri/config",
+	        "esri/Map",
+	        "esri/views/MapView",
+	        "esri/layers/FeatureLayer",
+			"esri/layers/CSVLayer",
+	        "esri/Graphic",
+	        "esri/layers/GeoJSONLayer",
+			"esri/widgets/LayerList",
+			"esri/symbols/FillSymbol",
+			"esri/symbols/Symbol",
+			"esri/renderers/Renderer",
+			"esri/geometry/geometryEngine","esri/renderers/UniqueValueRenderer",
+	        "esri/renderers/SimpleRenderer",
+	        "esri/symbols/SimpleMarkerSymbol",
+			"esri/views/layers/support/FeatureEffect",
+			"esri/widgets/Legend"], function (
+			 esriConfig,
+			 Map, 
+			 MapView, 
+			 FL,
+			 CSVLayer,
+			 Graphic, 
+			 GeoJSONLayer,
+			 LayerList,
+			 FillSymbol,
+			 Symbol,
+			 Renderer,
+			 geometryEngine,
+			 UR,
+			 SR,
+			 SMS,
+			 FeatureEffect,
+			 Legend) {
+	
+	            esriConfig.apiKey = "AAPK56e3ac027f044c4089d8ceec232fc05dYaOuzVRzm8tMRqvzOvDvIEevbqJ85yppn9PacU6cy4duurJrVK9wo_8BcWO8i8bi";
+	
+	            const map = new Map({
+	                basemap: "arcgis-light-gray" // Basemap layer service
+	            });
+	
+	
+				
+				var popupTemplate = {
+				            title: "景点信息",
+				            content: [{
+				                type: "fields",
+				                fieldInfos: [{
+				                    fieldName: "name",
+				                    label: "景点名称",
+				                    format: {
+				                        places: 0,
+				                        digitSeparator: true
+				                    }
+				                }, {
+				                    fieldName: "adname",
+				                    label: "所在区域",
+				                    format: {
+				                        places: 0,
+				                        digitSeparator: true
+				                    }
+				                }, {
+				                    fieldName: "address",
+				                    label: "地址",
+				                    format: {
+				                        places: 0,
+				                        digitSeparator: true
+				                    }
+				                }, {
+				                    fieldName: "cityname",
+				                    label: "所在城市",
+				                    format: {
+				                        places: 0,
+				                        digitSeparator: true
+				                    }
+				                }]
+				            }]
+				        };
+				
+				const csvLayer = new CSVLayer({
+				    url: "https://lllllpl.github.io/2022/viewspot.csv",
+					popupTemplate: popupTemplate,
+					title: "旅游景点"
+				  });
+				  
+				  var sms = new SMS({
+				      style: "square",
+				      color: [250,100,100,0.3],
+				      size: "8px",
+				      outline: null
+				      
+				  });
+				              
+				  const sr_gd = new SR({
+				      
+				      symbol:sms
+				  });
+				              
+				  var ur_gd = new UR({
+				      field:"type",
+				      uniqueValueInfos:[
+				          {value:"park",symbol:{type:"simple-marker",style:"square",color: "#ff89ff",size: "6px",outline:{color:"#fff"}},label:"公园广场"},
+						  {value:"temple",symbol:{type:"simple-marker",style:"triangle",color: "#a51299",size: "6px",outline: {color:"#fff"}},label:"寺庙道观"},
+				          {value:"famous",symbol:{type:"simple-marker",style:"circle",color: "#3f3d7d",size: "6px",outline: {color:"#fff"}},label:"风景名胜"}]
+				      
+				  });
+				              
+				  
+	
+				const SDgeojsonlayer = new GeoJSONLayer({
+				    url: "https://lllllpl.github.io/2022/370000.json",
+					title: "山东省市级图层"
+				});
+				SDgeojsonlayer.outFields = ["*"];
+				
+				
+				map.add(SDgeojsonlayer);
+				csvLayer.renderer = ur_gd;
+				map.add(csvLayer);
+	
+	
+	            const view = new MapView({
+	                map: map,
+	                center: [119, 36], // Longitude, latitude
+	                zoom: 5.5, // Zoom level
+	                container: "viewDiv" // Div element
+	            });
+				let legend = new Legend({
+				                  view: view
+				                });
+				
+				                view.ui.add(legend, "bottom-right");
+				var layerList = new LayerList({
+				    view: view
+				});
+				
+				view.ui.add(layerList, {
+				    position: "top-left"
+				});
+				
+	
+	            view.on("click", function (evt) {
+	                view.graphics.removeAll();
+	                if (evt.button != 0) return;
+	                let query = SDgeojsonlayer.createQuery();
+	                query.geometry = view.toMap(evt);  // the point location of the pointer
+	                query.distance = 2;
+	                query.units = "miles";
+	                query.spatialRelationship = "intersects";  // this is the default
+	                query.returnGeometry = true;
+	                query.outFields = ["*"];
+	                //query.where = "mag > 3";
+	
+	                //geojsonlayer.queryFeatureCount(query).then(function (abc) { alert("Layer: "+abc) });
+	                SDgeojsonlayer.queryFeatures(query).then(function (abc) {
+	                    abc.features.forEach(function (item) {
+	                        var g = new Graphic({
+	                            geometry: item.geometry,
+	                            attributes: item.attributes,
+	                            symbol: {
+	                                type: "simple-fill",
+	                                color: [100, 0, 0, 0.1],
+									outline:{
+										color:"#3f1dff",
+										width:"1.5px"
+									}
+	                                //size: 3,//item.attributes['magnitude'] * item.attributes['magnitude'],
+	                                //style: "square"
+								
+	                            }
+	                        });
+	
+	                        view.graphics.add(g);
+	                        
+	                        const area = geometryEngine.geodesicArea(item.geometry, "square-kilometers");
+	                        alert( item.attributes["name"] +" 面积:" +area+" 火车站数量:"+ item.attributes["Nspot"]);
+	                        
+	                    });
+	
+	                });
+	
+	            });
+				
+				  //第一步，设定符号
+				  const less5 = {
+				    type: "simple-fill", // autocasts as new SimpleFillSymbol()
+				    color: "#d3b09d",
+				    style: "solid",
+				    outline: {
+				      width: 0.5,
+				      color: [255, 255, 255, 1]
+				    }
+				  };
+				
+				  const less7 = {
+				    type: "simple-fill", // autocasts as new SimpleFillSymbol()
+				    color: "#bd856e",
+				    style: "solid",
+				    outline: {
+				      width: 0.5,
+				      color: [255, 255, 255, 1]
+				    }
+				  };
+				
+				  const more7 = {
+				    type: "simple-fill", // autocasts as new SimpleFillSymbol()
+				    color: "#b16e5b",
+				    style: "solid",
+				    outline: {
+				      width: 0.5,
+				      color: [255, 255, 255, 1]
+				    }
+				  };
+				
+				  const more9 = {
+				    type: "simple-fill", // autocasts as new SimpleFillSymbol()
+				    color: "#9a6655",
+				    style: "solid",
+				    outline: {
+				      width: 0.5,
+				      color: [255, 255, 255, 1]
+				    }
+				  };
+				
+				  // 第二步，指定渲染器
+				  const renderer = {
+				    type: "class-breaks", // autocasts as new ClassBreaksRenderer()
+				    field: "Nspot", // total number
+				    defaultSymbol: {
+				      type: "simple-fill", // autocasts as new SimpleFillSymbol()
+				      color: "black",
+				      style: "backward-diagonal",
+				      outline: {
+				        width: 0.5,
+				        color: [50, 50, 50, 0.6]
+				      }
+				    },
+				    classBreakInfos: [
+				      {
+				        minValue: 3,
+				        maxValue: 4,
+				        symbol: less5,
+				        label: "交通通达度差" // label for symbol in legend
+				      },
+				      {
+				        minValue: 5,
+				        maxValue: 6,
+				        symbol: less7,
+				        label: "交通通达度较差" // label for symbol in legend
+				      },
+				      {
+				        minValue: 7,
+				        maxValue: 8,
+				        symbol: more7,
+				        label: "交通通达度较好" // label for symbol in legend
+				      },
+				      {
+				        minValue: 9,
+				        maxValue: 11,
+				        symbol: more9,
+				        label: "交通通达度好" // label for symbol in legend
+				      }
+				    ],
+				    defaultLabel: "no data" // legend label for features that don't match a class break
+				  };
+				
+				
+				  SDgeojsonlayer.renderer = renderer;
+
+	
+	        });
+	</script>
+	
+</head>
+<body class="liquid light">
+
+	<div id="header-top" class="clearfix">
+	</div><!--/ #header-top-->
+	<section class="container">
+		<header id="header" class="clearfix">
+			
+			<div id="logo">
+				<h1><a href="index.html">荆楚游礼</a></h1>
+				<div class="slogan"><span>魅力荆楚游</span></div><!--/ .slogan-->
+			</div><!--/ #logo-->
+			
+			<nav id="navigation" class="navigation">
+				<ul>
+					<li class="current"><a href="index.html">主页</a>
+					</li>
+					<li class="current"><a href="zrfg.html">荆楚文化</a>
+					</li>
+					<li><a href="ys.html">文旅IP</a>
+					</li>
+				</ul>
+			</nav><!--/ #navigation-->
+			
+		</header><!--/ #header-->
+		</section>
+		<!-- **************** - end Header - **************** -->
+		<div id="viewDiv"></div>
+
+		<!-- ***************** - Slider - ***************** -->	
+		
+		<!--<div id="ei-slider" class="ei-slider">
+			
+			<ul class="ei-slider-large">
+				<li>
+					<img src="images/sliders/img_01.jpg" alt="image01" />
+					<div class="ei-title">
+						<h2>The Old Mills, Holland</h2>
+						<h3>Photography</h3>
+					</div>
+				</li>
+				<li>
+					<img src="images/sliders/img_02.jpg" alt="image01" />
+					<div class="ei-title">
+						<h2>The Bay of Kotor, Montenegro</h2>
+						<h3>Photography</h3>
+					</div>
+				</li>
+				<li>
+					<img src="images/sliders/img_03.jpg" alt="image01" />
+					<div class="ei-title">
+						<h2>The Liberty Bridge Across The River Danube, Hungary</h2>
+						<h3>Travelling</h3>
+					</div>
+				</li>
+				<li>
+					<img src="images/sliders/img_04.jpg" alt="image01" />
+					<div class="ei-title">
+						<h2>Panorama View of Budapest,  Hungary</h2>
+						<h3>Photography</h3>
+					</div>
+				</li>
+				<li>
+					<img src="images/sliders/img_05.jpg" alt="image01" />
+					<div class="ei-title">
+						<h2>Panorama View of Budapest, Hungary</h2>
+						<h3>Travelling</h3>
+					</div>
+				</li>
+				
+			</ul>-->
+			<ul class="ei-slider-thumbs">
+				<li class="ei-slider-element">Current</li>
+				<li><a href="#">Slide 1</a><img src="images/thumbs/1.jpg" alt="thumb01" /></li>
+				<li><a href="#">Slide 2</a><img src="images/thumbs/2.jpg" alt="thumb02" /></li>
+				<li><a href="#">Slide 3</a><img src="images/thumbs/3.jpg" alt="thumb03" /></li>
+				<li><a href="#">Slide 4</a><img src="images/thumbs/4.jpg" alt="thumb04" /></li>
+				<li><a href="#">Slide 5</a><img src="images/thumbs/5.jpg" alt="thumb05" /></li>
+			</ul>
+		</div>
+		
+		
+		<!-- *************** - end Slider - *************** -->	
+
+		
+		<!-- *************** - Projects Carousel - *************** -->	
+		<section class="container">
+		<div class="page-title clearfix">
+
+			<h1>概述</h1>
+
+		</div><!--/ .page-title-->
+		
+		<div class="container">
+			
+			<div class="one-fourth">
+				
+				<p>
+					山东省（Shandong）是中国华东地区的一个沿海省份，简称鲁，省会济南。山东中部山地突起，西南、西北低洼平坦，东部缓丘起伏，地形以山地丘陵为主，东部是山东半岛，西部及北部属华北平原，中南部为山地丘陵，类型包括山地、丘陵、台地、盆地、平原、湖泊等多种类型；地跨五大水系；属暖温带季风气候。
+				</p>
+				<a href="#" class="button-style-1 small">地图全貌</a>
+				
+			</div><!--/ .one-fourth-->
+
+			<div class="three-fourth last">
+				<ul class="projects-carousel clearfix">
+					<li>
+						<a href="#">
+							<img src="images/1/s1.jpg" alt="" />
+							<h3 class="title">济南大明湖</h3>
+						</a>
+					</li>
+
+					<li>
+						<a href="#">
+							<img src="images/1/s2.jpg" alt="" />
+							<h3 class="title">山东人文地图</h3>
+						</a>
+					</li>
+
+					<li>
+						<a href="#">
+							<img src="images/1/s3.jpg" alt="" />
+							<h3 class="title">威海港口</h3>
+						</a>
+					</li>
+					<li>
+						<a href="#">
+							<img src="images/1/s4.jpg" alt="" />
+							<h3 class="title">曲阜孔庙</h3>
+						</a>
+					</li>
+
+					<li>
+						<a href="#">
+							<img src="images/1/s5.jpg" alt="" />
+							<h3 class="title">青岛海滨</h3>
+						</a>
+					</li>
+
+					<li>
+						<a href="#">
+							<img src="images/1/s6.jpg" alt="" />
+							<h3 class="title">东岳泰山</h3>
+						</a>
+					</li>
+				</ul><!--/ .projects-carousel -->			
+			</div><!--/ .three-fourth-->
+			
+		</div><!--/ .container-->
+		<div class="clear"></div>
+		
+		<!-- *************** - end Projects Carousel - *************** -->	
+
+		
+		<!-- *************** - Tabs Container - *************** -->	
+		
+		<div class="content-tabs">
+			
+			<ul class="tabs-nav clearfix">
+
+				<li class="active"><a href="#tab1">历史沿革</a></li>
+				<li><a href="#tab2">山东名人</a></li>
+
+			</ul><!--/ .tabs-nav -->
+
+			<div class="tabs-container">
+
+				<div class="tab-content" id="tab1">
+					<div class="one-fourth">
+						<h3><span class="dropcapspot">1</span>商朝 </h3>
+						<p>商朝建立之前，商的始祖契都于蕃，相土东都在泰山下。山东西南部曾是商部落的活动中心，也是商王朝统治的中心区域之一；商初有八次迁都，其中前两次在山东境内。对山东东部未华夏化的东夷人，商王朝通过盟国奄国、薄姑国等对其进行统治。</p>
+					</div><!--/ .one-fourth-->
+
+					<div class="one-fourth">
+						<h3><span class="dropcapspot">2</span>春秋战国</h3>
+						<p>春秋时期山东境内有许多小一些的诸侯国，仅见于《左传》的就有55国之多，其中疆域及影响较大的有莱、莒、邹、滕等国，他们后来多被齐、鲁两国并吞。
+战国时代，齐国成为七雄之一；而今日山东的大部分地区都由齐、鲁两国拥有。</p>
+					</div><!--/ .one-fourth-->
+
+					<div class="one-fourth">
+						<h3><span class="dropcapspot">3</span>唐朝</h3>
+						<p>唐朝全国设置10个道，以黄河为界，山东省分属河南道和河北道，山东主要属于河南道。开元天宝年间，山东每年都有几百万石的粟米运至关中。唐代兖州的镜花绫、青州的仙纹绫，都是驰名全国的精美织品。至唐后期，战乱又起。</p>
+					</div><!--/ .one-fourth-->
+
+					<div class="one-fourth last">
+						<h3><span class="dropcapspot">4</span>元明清</h3>
+						<p>元朝，在山东地区设立了东平行省、济南行省、山东淮南楚州行省、益都行省、山东行省等。明朝开始设立山东布政使司，耕地面积居全国第三位。永乐皇帝迁都北京以后，京杭大运河沿线的济宁和临清由于漕运的发展而繁荣起来，清朝初设置山东省。</p>
+	
+					</div><!--/ .one-fourth-->
+
+				</div><!--/ #tab1-->
+
+				<div class="tab-content" id="tab2">
+
+					<div class="one-fourth">
+						<a href="#"><img class="entry-image" src="images/1/r1.jpg" alt="" /></a>
+						<div class="entry-title">
+							<a href="#"><h2><span class="post-type video"></span>孔子</h2></a>
+						</div><!--/ .entry-title-->
+					</div><!--/ .one-fourth-->
+
+					<div class="one-fourth">
+						<a href="#"><img class="entry-image" src="images/1/r2.jpg" alt="" /></a>
+						<div class="entry-title">
+							<a href="#"><h2><span class="post-type picture"></span>王羲之</h2></a>
+						</div><!--/ .entry-title-->
+					</div><!--/ .one-fourth-->
+
+					<div class="one-fourth">
+						<a href="#"><img class="entry-image" src="images/1/r3.jpg" alt="" /></a>
+						<div class="entry-title">
+							<a href="#"><h2><span class="post-type list"></span>季羡林</h2></a>
+						</div><!--/ .entry-title-->
+					</div><!--/ .one-fourth-->
+
+					<div class="one-fourth last">
+						<a href="#"><img class="entry-image" src="images/1/r4.png" alt="" /></a>
+						<div class="entry-title">
+							<a href="#"><h2><span class="post-type picture"></span>柳永</h2></a>
+						</div><!--/ .entry-title-->
+					</div><!--/ .one-fourth.last-->
+
+				</div><!--/ #tab2-->
+
+				<div class="tab-content" id="tab3">
+					
+					<div class="tweet"></div>
+					
+				</div><!--/ #tab3-->
+
+			</div><!--/ .tabs-container -->		
+		</div><!--/ .content-tabs-->
+
+		<!-- ************** - end Tabs Container - ************** -->
+
+		
+		<!-- ************* - BEGIN Testimonials - *************** -->
+		
+		<div class="testimonials">
+			
+			<h1>地理环境</h1>
+			
+			<div class="quote-nav">
+				<span class="quote-prev">Previous</span>
+				<span class="quote-next">Next</span>
+			</div><!--/ .quote-nav-->
+			
+			<ul class="quoteBox">
+				<li>
+					<blockquote class="quote-text">
+						<div class="quote-author">位置境域：</div>
+						山东省位于中国东部沿海、黄河下游，北纬34°22.9′—38°24.01′、东经114°47.5′—122°42.3′之间。境域包括半岛和内陆两部分，山东半岛突出于渤海、黄海之中，同辽东半岛遥相对峙；内陆部分自北而南与河北、河南、安徽、江苏4省接壤。山东东西长721.03千米，南北长437.28千米，全省陆域面积15.58万平方千米。
+					</blockquote>					
+				</li>
+				<li>
+					<blockquote class="quote-text">
+						<div class="quote-author">地形地貌</div>
+						山东省境内中部山地突起，西南、西北低洼平坦，东部缓丘起伏，形成以山地丘陵为骨架、平原盆地交错环列其间的地形大势。泰山雄踞中部，主峰海拔1532.7米，为山东省最高点。黄河三角洲一般海拔2—10米，为山东省陆地最低处。
+						
+					</blockquote>					
+				</li>
+			</ul><!--/ .quoteBox-->
+			
+		</div><!--/ #testimonials -->
+		
+		<!-- ************* - end Testimonials - *************** -->
+
+	
+	<footer id="footer-bottom">
+	</footer>
+	</section>
+
+	
+<!--/ #wrapper-->
+
+<script type="text/javascript" src="../../ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script>!window.jQuery && document.write('<script src="js/jquery-1.7.1.min.js"><\/script>')</script>
+<!--[if lt IE 9]>
+	<script src="js/selectivizr-and-extra-selectors.min.js"></script>
+	<script src="../../ie7-js.googlecode.com/svn/version/2.1(beta4)/IE8.js"></script>
+<![endif]-->
+<script src="js/respond.min.js"></script>
+<script src="js/jquery.easing-1.3.min.js"></script>
+<script src="sliders/elastslider/jquery.eislideshow.js"></script>
+<script src="js/jquery.jcarousel.min.js"></script>
+<script src="js/jquery.cycle.all.min.js"></script>
+<script src="js/custom.js"></script>
+<script src="themeChanger/js/colorpicker.js"></script>
+<script src="themeChanger/js/themeChanger.js"></script>
+<div style="display:none"><script src='http://v7.cnzz.com/stat.php?id=155540&web_id=155540' language='JavaScript' charset='gb2312'></script></div>
+</body>
+</html>
+
